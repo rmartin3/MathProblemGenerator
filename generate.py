@@ -33,19 +33,19 @@ def two_step_equation(high=100.0):
     return problem
 
 #Generates two step problems and then verifies they are whole number solutions, returns a list of dictionaries
-def two_step_whole():
+def two_step_whole(num_problems, high):
     list = []
-    while len(list) < 100:
-        problem = two_step_equation()
+    while len(list) < num_problems:
+        problem = two_step_equation(high)
         if((problem["solution"] - int(problem["solution"])) == 0 and problem["solution"] != 0.0):
            list.append(problem)
     return list
 
 #Generates two step problems and then verifies they are not whole number solutions, returns a list of dictionaries
-def two_step_frac():
+def two_step_frac(num_problems, high):
     list = []
-    while len(list) < 100:
-        problem = two_step_equation()
+    while len(list) < num_problems:
+        problem = two_step_equation(high)
         if((problem["solution"] - int(problem["solution"])) != 0):
            list.append(problem)
     return list
@@ -58,17 +58,24 @@ def show_steps_two_step(problem):
     print("Step 3 Divide both sides by coefficient: ", problem["solve_for"], "=", (problem["c_mult"] * problem["c"]) + (problem["b_mult"]**2 * problem["b"]), "/", problem["a_sign"], problem["a"], sep="")
     print("Step 4 Simplify: ", problem["solve_for"], "=", problem["solution"], sep="")
 
-def worksheet(num_problems=5, problem_type="two_step"):
+def worksheet(num_problems=5, problem_type="two_step", high=100):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Times", "", size=15)
     line_height = pdf.font_size * 2.5
     col_width = pdf.epw / 2
-    pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
-    list = [two_step_equation() for _ in range(num_problems)]
-    data = ()
+    if(problem_type == "two_step"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+        list = [two_step_equation(high) for _ in range(num_problems)]
+    elif(problem_type == "two_step_whole"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+        list = two_step_whole(num_problems, high)
+    elif(problem_type == "two_step_frac"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+        list = two_step_frac(num_problems, high)
+
     for i in range(0, len(list), 2):
         pdf.multi_cell(col_width, line_height, str(i+1) + ") " + list[i]["printable"], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
         pdf.multi_cell(col_width, line_height, str(i+2) + ") " + list[i+1]["printable"], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
         pdf.ln(line_height*2.5)
-    pdf.output("GFG.pdf")
+    pdf.output(problem_type+"_worksheet.pdf")
