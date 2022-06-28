@@ -8,19 +8,19 @@ def two_step_equation(high=100.0):
     safe_lowercase = ascii_lowercase.replace("l", "").replace("o", "").replace("i", "").replace("e", "")
     problem = {
         "solve_for": random.choice(safe_lowercase),
-        "a": random.randrange(1.0, high, 1),
+        "a": random.randrange(1.0, high+1, 1),
         "a_sign": random.choice(["", "-"]),
         "a_mult": 1,
-        "b": random.randrange(0.0, high, 1),
+        "b": random.randrange(0.0, high+1, 1),
         "b_sign": random.choice(["+", "-"]),
         "b_mult": 1,
-        "c": random.randrange(0.0, high, 1),
+        "c": random.randrange(0.0, high+1, 1),
         "c_sign": random.choice(["", "-"]),
         "c_mult": 1,
         "solution": 0.0,
         "printable": "",
     }
-    problem["printable"] = str(problem["a_sign"]) + str(problem["a"]) + problem["solve_for"] + " " + str(problem["b_sign"]) + str(problem["b"]) + " = " + str(problem["c_sign"]) + str(problem["c"])
+    problem["printable"] = str(problem["a_sign"]) + str(problem["a"]) + problem["solve_for"] + " " + str(problem["b_sign"]) + " " + str(problem["b"]) + " = " + str(problem["c_sign"]) + str(problem["c"])
     if(problem["a_sign"] == "-"):
         problem["a_mult"] = -1
     if(problem["b_sign"] == "-"):
@@ -28,7 +28,7 @@ def two_step_equation(high=100.0):
     if(problem["c_sign"] == "-"):
         problem["c_mult"] = -1
    
-    problem["solution"] = ((problem["c"] * problem["c_mult"]) + (problem["b"] * problem["b_mult"]**2)) / (problem["a"] * problem["a_mult"])
+    problem["solution"] = ((problem["c"] * problem["c_mult"]) + (problem["b"] * problem["b_mult"]*(-1))) / (problem["a"] * problem["a_mult"])
    
     return problem
 
@@ -37,7 +37,9 @@ def two_step_whole(num_problems, high):
     list = []
     while len(list) < num_problems:
         problem = two_step_equation(high)
-        if((problem["solution"] - int(problem["solution"])) == 0 and problem["solution"] != 0.0):
+        #Include below line if you want to exclude 0 as an answer
+        #and problem["solution"] != 0.0
+        if((problem["solution"] - int(problem["solution"])) == 0 ):
            list.append(problem)
     return list
 
@@ -54,8 +56,8 @@ def two_step_frac(num_problems, high):
 def show_steps_two_step(problem):
     print("Base problem: ", problem["a_sign"], problem["a"], problem["solve_for"], problem["b_sign"], problem["b"], "=", problem["c_sign"], problem["c"], sep="")
     print("Step 1 Move second term over: ", problem["a_sign"], problem["a"], problem["solve_for"], "=", problem["c_sign"], problem["c"], "-(", ("" if problem["b_sign"] == "+" else "-"), problem["b"], ")", sep="")
-    print("Step 2 Combine right side terms: ", problem["a_sign"], problem["a"], problem["solve_for"], "=", (problem["c_mult"] * problem["c"]) + (problem["b_mult"]**2 * problem["b"]), sep="")
-    print("Step 3 Divide both sides by coefficient: ", problem["solve_for"], "=", (problem["c_mult"] * problem["c"]) + (problem["b_mult"]**2 * problem["b"]), "/", problem["a_sign"], problem["a"], sep="")
+    print("Step 2 Combine right side terms: ", problem["a_sign"], problem["a"], problem["solve_for"], "=", (problem["c_mult"] * problem["c"]) + (problem["b_mult"]*(-1) * problem["b"]), sep="")
+    print("Step 3 Divide both sides by coefficient: ", problem["solve_for"], "=", (problem["c_mult"] * problem["c"]) + (problem["b_mult"]*(-1) * problem["b"]), "/", problem["a_sign"], problem["a"], sep="")
     print("Step 4 Simplify: ", problem["solve_for"], "=", problem["solution"], sep="")
 
 def worksheet(num_problems=5, problem_type="two_step", high=100):
@@ -76,6 +78,28 @@ def worksheet(num_problems=5, problem_type="two_step", high=100):
 
     for i in range(0, len(list), 2):
         pdf.multi_cell(col_width, line_height, str(i+1) + ") " + list[i]["printable"], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
-        pdf.multi_cell(col_width, line_height, str(i+2) + ") " + list[i+1]["printable"], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
+        if(i+1 < len(list)):
+            pdf.multi_cell(col_width, line_height, str(i+2) + ") " + list[i+1]["printable"], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
         pdf.ln(line_height*2.5)
     pdf.output(problem_type+"_worksheet.pdf")
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Times", "", size=15)
+    line_height = pdf.font_size * 2.5
+    col_width = pdf.epw / 3
+    if(problem_type == "two_step"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+    elif(problem_type == "two_step_whole"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+    elif(problem_type == "two_step_frac"):
+        pdf.cell(pdf.epw, line_height, txt="Two Step Problems", ln=1, align='L')
+
+    for i in range(0, len(list), 3):
+        pdf.multi_cell(col_width, line_height, str(i+1) + ": " + str(list[i]["solution"])[0:6], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
+        if(i+1 < len(list)):
+            pdf.multi_cell(col_width, line_height, str(i+2) + ": " + str(list[i+1]["solution"])[0:6], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
+        if(i+2 < len(list)):
+            pdf.multi_cell(col_width, line_height, str(i+3) + ": " + str(list[i+2]["solution"])[0:6], border=0, new_x="RIGHT", new_y="TOP", max_line_height=pdf.font_size)
+        pdf.ln(line_height)
+    pdf.output(problem_type+"_answerkey.pdf")
